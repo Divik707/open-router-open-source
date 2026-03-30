@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {-
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,83 @@ generator client {-
 
 datasource db {
   provider = "postgresql"
+}
+
+
+model User {
+  id                    String @id @default(uuid())
+  email                 String @unique
+  password              String
+  credits               Int @default(100)
+  apiKeys               ApiKeys[]
+  onRampTransaction     OnRampTransaction[]
+  conversation          Conversation[]
+}
+
+model ApiKeys {
+  id                    String @id @default(uuid())
+  apikey                String
+  disabled              Boolean @default(false)
+  deleted               Boolean @default(false)
+  userId                String
+  user                  User @relation(fields: [userId], references: [id])
+  lastUsed              DateTime @default(now())
+  creditConsumed        Int @default(0)
+  conversation          Conversation[]
+}
+
+model Company {
+  id                    String @id @default(uuid())
+  name                  String 
+  website               String
+  models                Models[]
+}
+
+model Models {
+  id                    String @id @default(uuid())
+  name                  String
+  slug                  String
+  companyId             String
+  company               Company @relation(fields: [companyId], references: [id])
+  model2Provider        Model2ProviderMapping[] 
+}
+
+model  Provider {
+  id                    String @id @default(uuid())
+  name                  String
+  website               String
+  model2Provider        Model2ProviderMapping[]
+}
+
+model Model2ProviderMapping {
+  id                    String @id @default(uuid())
+  modelId               String
+  model                 Models @relation(fields: [modelId], references: [id])
+  providerId            String
+  provider              Provider @relation(fields: [providerId], references: [id])
+  inputTokenConsumed    Int
+  outputTokenConsumed   Int
+  conversation          Conversation[]
+}
+
+model Conversation {
+  id                    String @id @default(uuid())
+  userId                String
+  user                  User @relation(fields: [userId], references: [id])
+  ApiKeyId              String
+  ApiKey                ApiKeys @relation(fields: [ApiKeyId], references: [id]) 
+  input                 String
+  output                String
+  model2ProviderId      String
+  model2Provider        Model2ProviderMapping @relation(fields: [model2ProviderId], references: [id])
+  inputToken            Int
+  outputToken           Int
+}
+
+model OnRampTransaction {
+  id                    String @id @default(uuid())
+  userId                String
+  user                  User @relation(fields: [userId], references: [id])
+  amount                Int
+  status                String
 }
